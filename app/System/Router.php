@@ -20,13 +20,13 @@ class Router
         if (!empty($url[0])) {
             $this->controller .= ucfirst($url[0]) . 'Controller';
         } else {
-            $this->controller = 'IndexController';
+            $this->controller .= 'IndexController';
         }
 
         if (!empty($url[1])) {
             $this->action .= $url[1] . 'Action';
         } else {
-            $this->action = 'indexAction';
+            $this->action .= 'indexAction';
         }
 
         if (!empty($url[2])) {
@@ -40,16 +40,29 @@ class Router
                     $value[] = $url[$i];
                 }
             }
-        }
 
-        if (!$this->params = array_combine($key, $value)) {
-            throw new \Exception('Error: Invalid request');
+            if (!$this->params = array_combine($key, $value)) {
+                throw new \Exception('Error: Invalid request');
+            }
         }
 
     }
 
     public function processRequest()
     {
-        var_dump($this->params);
+        if (class_exists($this->controller)) {
+            $ref = new \ReflectionClass($this->controller);
+
+            if ($ref->hasMethod($this->action)) {
+
+                if ($ref->isInstantiable()) {
+                    $class = $ref->newInstance();
+                    $method = $ref->getMethod($this->action);
+                    $method->invoke($class, $this->params);
+                }
+            }
+        } else {
+            throw new \Exception('Processing request error');
+        }
     }
 }
